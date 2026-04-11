@@ -16,9 +16,14 @@ To achieve this, I built the UVM hierarchy from the ground up. All code was writ
 ## 📊 Results & Proof of Concept
 The testbench was compiled and simulated using Siemens QuestaSim. The simulation waveforms provided in this repository definitively prove that the UVM hardware-software handshake operates flawlessly:
 
-1. **Textbook Interrupt Handling (`control_unit_uvm_test_irq.png`)**: The zoomed-in waveform proves that at the exact moment the physical chip's FIFOs run low and assert the `irq_out` signal, the software sequence detects it. You can see the `num_waiters` variable instantly drop from `1` to `0`, meaning the sequence woke up. Immediately after, the sequence drives a rapid, dense burst of transactions across the APB bus to refill the FIFOs.
-2. **System Stability (`control_unit_uvm_test.png`)**: The zoomed-out waveform proves the macro-level stability of the design. Because the UVM environment dynamically and efficiently services every hardware interrupt, the chip never starves for data. This is proven by the continuous, uninterrupted toggling of the I2S audio output signals (`ws_out`, `sck_out`, and `sdo_out`) over time.
-3. **Architecture Verification (`control_unit_uvm_test_env.png`)**: The visualizer schematic confirms that all UVM components were instantiated correctly and that the yellow TLM analysis port wires were successfully routed between agents.
+1. **Textbook Interrupt Handling**: The zoomed-in waveform proves that at the exact moment the physical chip's FIFOs run low and assert the `irq_out` signal, the software sequence detects it. You can see the `num_waiters` variable instantly drop from `1` to `0`, meaning the sequence woke up. Immediately after, the sequence drives a rapid, dense burst of transactions across the APB bus to refill the FIFOs.
+![Interrupt Handling](control_unit_uvm_test_irq.jpg)
+
+2. **System Stability**: The zoomed-out waveform proves the macro-level stability of the design. Because the UVM environment dynamically and efficiently services every hardware interrupt, the chip never starves for data. This is proven by the continuous, uninterrupted toggling of the I2S audio output signals (`ws_out`, `sck_out`, and `sdo_out`) over time.
+![System Stability](control_unit_uvm_test.jpg)
+
+3. **Architecture Verification**: The visualizer schematic confirms that all UVM components were instantiated correctly and that the yellow TLM analysis port wires were successfully routed between agents.
+![Architecture Verification](control_unit_uvm_test_env.jpg)
 
 ## 📂 Repository Files
 *(Note: SystemVerilog header files have been uploaded as `.txt` for easy repository viewing).*
