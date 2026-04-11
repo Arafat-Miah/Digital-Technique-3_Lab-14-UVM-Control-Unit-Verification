@@ -32,9 +32,9 @@ The testbench was compiled and simulated using Siemens QuestaSim. The simulation
 * `control_unit_env.txt` - UVM Environment and TLM connection phase.
 * `control_unit_sequence.txt` - The stimulus generation and dynamic interrupt-servicing logic.
 * `control_unit_uvm_test.txt` - Top-level execution and objection handling.
-* `control_unit_uvm_test_env.jpg` - Schematic of the UVM hierarchy.
-* `control_unit_uvm_test_irq.jpg` - Waveform showing micro-level interrupt response.
-* `control_unit_uvm_test.jpg` - Waveform showing macro-level I2S audio streaming.
+* `control_unit_uvm_test_env.png` - Schematic of the UVM hierarchy.
+* `control_unit_uvm_test_irq.png` - Waveform showing micro-level interrupt response.
+* `control_unit_uvm_test.png` - Waveform showing macro-level I2S audio streaming.
 
 ## 🧠 What I Learned This Week
 
