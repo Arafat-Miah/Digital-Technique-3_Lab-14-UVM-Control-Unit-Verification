@@ -1,0 +1,117 @@
+///////////////////////////////////////////////////////////
+// control_unit_sequence
+///////////////////////////////////////////////////////////
+
+class control_unit_sequence extends uvm_sequence #(apb_transaction);
+      `uvm_object_utils(control_unit_sequence)
+
+   //-------------------------------------------------------- 
+   // Member functions
+   //--------------------------------------------------------
+	
+   function new (string name = "");
+      super.new(name);
+   endfunction
+
+   
+   // Helper task to make sending UVM transactions easy!
+   task write_apb(logic [31:0] waddr, logic [31:0] wdata);
+      apb_transaction tx; // Declare tx inside the helper task
+      
+      tx = apb_transaction::type_id::create("tx"); // Create the package
+      start_item(tx);
+      tx.addr = waddr;
+      tx.data = wdata;
+      tx.write_mode = '1;
+      tx.fail = 0;
+      finish_item(tx);
+   endtask
+
+   task body;
+
+      /////////////////////////////////////////////////////////////////////
+      // Variable declarations
+      /////////////////////////////////////////////////////////////////////      
+
+      uvm_event                 irq_event;
+      logic [23:0]              stream_wdata;   // From Step 2
+      int                       i, j;           // Loop counters
+
+      /////////////////////////////////////////////////////////////////////      
+      // Executable code
+      /////////////////////////////////////////////////////////////////////
+
+      reset_test_stats; 
+
+      // WAIT FOR THE SYSTEM TO EXIT RESET BEFORE DOING ANYTHING!     
+      #5us;       
+      irq_event = uvm_event_pool::get_global("irq_out");
+
+      // 1. Write random configuration data to all registers in DUT region
+      for (int addr = DUT_START_ADDRESS; addr <= DUT_END_ADDRESS; addr += 4) begin
+         write_apb(addr, $urandom());
+      end
+
+      // 2. Set stream_wdata = 1.
+      stream_wdata = 1;
+
+      // 3. Repeat AUDIO_FIFO_SIZE times: fill the left and right FIFOs
+      for (i = 0; i < AUDIO_FIFO_SIZE; i++) begin
+         write_apb(LEFT_FIFO_ADDRESS, stream_wdata);
+         stream_wdata++;
+         write_apb(RIGHT_FIFO_ADDRESS, stream_wdata);
+         stream_wdata++;
+      end
+
+      // 4. Write data to the CFG_REG register to enable the filter.
+      write_apb(CFG_REG_ADDRESS, 32'h00000001); // Assuming 1 is enable
+
+      // 5. Write the command code CMD_CFG to the CMD_REG register.
+      write_apb(CMD_REG_ADDRESS, CMD_CFG);
+
+      // 6. Write data to the LEVEL_REG register to set playback volume to max
+      write_apb(LEVEL_REG_ADDRESS, 32'h7FFF7FFF); // Assuming 7FFF is max for 16-bit left/right
+
+      // 7. Write the command code CMD_LEVEL to the CMD_REG register.
+      write_apb(CMD_REG_ADDRESS, CMD_LEVEL);
+
+      // 8. Write the command code CMD_START to the CMD_REG register.
+      write_apb(CMD_REG_ADDRESS, CMD_START);
+
+      // Repeat steps 8-10 four times:
+      for (j = 0; j < 4; j++) begin
+         
+         // Wait until interrupt triggers, then wait for CPU latency
+         irq_event.wait_trigger();
+         #INTERRUPT_LATENCY;
+
+         // 9. FILL the FIFOs by repeating the actions of step 3
+         for (i = 0; i < AUDIO_FIFO_SIZE; i++) begin
+            write_apb(LEFT_FIFO_ADDRESS, stream_wdata);
+            stream_wdata++;
+            write_apb(RIGHT_FIFO_ADDRESS, stream_wdata);
+            stream_wdata++;
+         end
+
+         // 10. Write the command code CMD_IRQACK to the CMD_REG register.
+         write_apb(CMD_REG_ADDRESS, CMD_IRQACK);
+      end
+
+      // 11. Write the command code CMD_STOP to the CMD_REG register.
+      write_apb(CMD_REG_ADDRESS, CMD_STOP);
+
+      // 12. Write the command code CMD_CLR to the CMD_REG register.
+      write_apb(CMD_REG_ADDRESS, CMD_CLR);
+
+      // 13. Wait for 10us to give CMD_CLR time to work.
+      #10us;
+
+   endtask
+
+   //----------------------------------------------------------------
+   // Notice! This sequence can only access the control_unit's APB
+   //         bus ports. Therefore the test program functions that need
+   //         access to other ports are not implemented.
+   //-----------------------------------------------------------------
+
+endclass 
