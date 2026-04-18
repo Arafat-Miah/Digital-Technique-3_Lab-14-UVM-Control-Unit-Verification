@@ -53,5 +53,4 @@ Any reuse should be for learning or professional evaluation only.
 ## Author
 **Arafat Miah**  
 Digital Design
-* **Sequence Abstraction & DRY Principles:** Improved object-oriented coding practices by wrapping standard, repetitive UVM handshakes (`start_item()` / `finish_item()`) into reusable helper tasks (like `write_apb`). This keeps the sequence logic clean, scalable, and focused on the actual test intent rather than UVM boilerplate code.
 
